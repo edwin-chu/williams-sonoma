@@ -16,7 +16,7 @@ public class AppBasics
 	public static String greetUserAndGetName(String appName)
 	{
 		System.out.println("Welcome to the " + appName + " Application");
-		System.out.println("Could I get your name plaese: ");
+		System.out.println("Could I get your name please: ");
 		return scanner.nextLine();
 	}
 }
