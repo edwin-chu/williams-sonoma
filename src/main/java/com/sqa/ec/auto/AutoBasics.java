@@ -7,6 +7,9 @@
  */
 package com.sqa.ec.auto;
 
+import java.io.*;
+
+import org.apache.commons.io.*;
 import org.openqa.selenium.*;
 import org.testng.log4testng.*;
 
@@ -34,6 +37,21 @@ public class AutoBasics
 		{
 			// TODO Auto-generated catch block
 			logger.warn("Element was not found: " + by);
+			return false;
+		}
+	}
+
+	public static boolean takeScreenshot(String fileLocation, String fileName, WebDriver driver, Logger logger)
+	{
+		File srcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+		try
+		{
+			FileUtils.copyFile(srcFile, new File(fileLocation + "/" + fileName + " .png"));
+			return true;
+		} catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			logger.warn("Screenshot " + fileName + " was not captured to disk correctly.");
 			return false;
 		}
 	}
