@@ -7,6 +7,8 @@
  */
 package com.sqa.ec.helpers;
 
+import com.sqa.ec.auto.*;
+
 /**
  * AbstractLoginTest //ADDD (description of class)
  * <p>

@@ -1,4 +1,4 @@
-package com.sqa.ec.helpers;
+package com.sqa.ec.auto;
 
 import java.util.concurrent.*;
 
