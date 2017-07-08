@@ -6,8 +6,6 @@ import org.openqa.selenium.chrome.*;
 import org.openqa.selenium.firefox.*;
 import org.testng.annotations.*;
 
-import com.sqa.ec.auto.*;
-
 public class BasicTest extends Core
 {
 
@@ -31,7 +29,6 @@ public class BasicTest extends Core
 		getDriver().manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 		// Maximize the window
 		getDriver().manage().window().maximize();
-		getDriver().get(getBaseURL());
 	}
 
 	@BeforeClass(enabled = false)
@@ -47,6 +44,13 @@ public class BasicTest extends Core
 		getDriver().manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 		// Maximize the window
 		getDriver().manage().window().maximize();
+	}
+
+	@BeforeMethod()
+	public void setupTest()
+	{
+		// goto base URL
+		getDriver().get(getBaseURL());
 	}
 
 	@AfterClass
