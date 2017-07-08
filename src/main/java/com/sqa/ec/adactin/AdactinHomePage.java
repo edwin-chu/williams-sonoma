@@ -27,9 +27,10 @@ public class AdactinHomePage extends BasicPage
 	public void login(String username, String password)
 	{
 		this.usernameField.clear();
-		this.usernameField.sendKeys("AdactIn.com - Search Hotel");
+		// this.usernameField.sendKeys("AdactIn.com - Search Hotel");
+		this.usernameField.sendKeys(username);
 		this.passwordField.clear();
-		this.passwordField.sendKeys();
+		this.passwordField.sendKeys(password);
 		this.loginButton.click();
 	}
 }
