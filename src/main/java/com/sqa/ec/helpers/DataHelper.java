@@ -227,7 +227,7 @@ public class DataHelper
 	 * @return
 	 * @throws InvalidExcelExtensionException
 	 */
-	public static Object[][] getExcelFileData(String fileLocation, String fileName, Boolean hasLabels) throws InvalidExcelExtensionException
+	public static Object[][] getExcelFileData(String fileLocation, String fileName, Boolean hasLabels, DataType[] dataTypes) throws InvalidExcelExtensionException
 	{
 		// Use a variable to store the 2D Object;
 		Object[][] resultsObject;
@@ -246,13 +246,13 @@ public class DataHelper
 		{
 			// Call method to get results from a new type
 			// for excel document
-			results = getNewExcelFileResults(fileLocation, fileName, hasLabels);
+			results = getNewExcelFileResults(fileLocation, fileName, hasLabels, dataTypes);
 			// Check for the extension to be xls or old
 			// Excel -2003
 		} else if (extension.equalsIgnoreCase("xls"))
 		{
 			// Call method to get results from a old type for excel document
-			results = getOldExcelFileResults(fileLocation, fileName, hasLabels);
+			results = getOldExcelFileResults(fileLocation, fileName, hasLabels, dataTypes);
 			// if extension is not one of these, through
 			// exception
 		} else
@@ -316,13 +316,13 @@ public class DataHelper
 			data = parseCSVData(lines, hasLabels, dataTypes);
 			break;
 		case XML:
-			data = parseXMLData(lines, hasLabels);
+			data = parseXMLData(lines, hasLabels, dataTypes);
 			break;
 		case TAB:
-			data = parseTabData(lines, hasLabels);
+			data = parseTabData(lines, hasLabels, dataTypes);
 			break;
 		case JSON:
-			data = parseJSONData(lines, hasLabels);
+			data = parseJSONData(lines, hasLabels, dataTypes);
 			break;
 		default:
 			data = null;
@@ -391,7 +391,8 @@ public class DataHelper
 	 * @param sheet
 	 * @return
 	 */
-	private static ArrayList<Object> collectExcelData(Boolean hasLabels, InputStream newExcelFormatFile, ArrayList<Object> results, Workbook workbook, Sheet sheet)
+	private static ArrayList<Object> collectExcelData(Boolean hasLabels, InputStream newExcelFormatFile, ArrayList<Object> results, Workbook workbook, Sheet sheet,
+			DataType[] dataTypes)
 	{
 		try
 		{
@@ -405,6 +406,7 @@ public class DataHelper
 				ArrayList<Object> rowData = new ArrayList<Object>();
 				Row row = rowIterator.next();
 				Iterator<Cell> cellIterator = row.cellIterator();
+				int curColumn = 0;
 				while (cellIterator.hasNext())
 				{
 					Cell cell = cellIterator.next();
@@ -415,14 +417,26 @@ public class DataHelper
 						rowData.add(cell.getBooleanCellValue());
 						break;
 					case Cell.CELL_TYPE_NUMERIC:
-						System.out.print(cell.getNumericCellValue() + "\t\t\t");
-						rowData.add(cell.getNumericCellValue());
+						if (dataTypes[curColumn] == DataType.INT)
+						{
+							System.out.print((int) cell.getNumericCellValue() + "(" + dataTypes[curColumn] + ")\t\t\t");
+							rowData.add((int) cell.getNumericCellValue());
+						} else if (dataTypes[curColumn] == DataType.FLOAT)
+						{
+							System.out.print((float) cell.getNumericCellValue() + "(" + dataTypes[curColumn] + ")\t\t\t");
+							rowData.add((float) cell.getNumericCellValue());
+						} else
+						{
+							System.out.print(cell.getNumericCellValue() + "(" + dataTypes[curColumn] + ")\t\t\t");
+							rowData.add(cell.getNumericCellValue());
+						}
 						break;
 					case Cell.CELL_TYPE_STRING:
 						System.out.print(cell.getStringCellValue() + "\t\t\t");
 						rowData.add(cell.getStringCellValue());
 						break;
 					}
+					curColumn++;
 				}
 				Object[] rowDataObject = new Object[rowData.size()];
 				rowData.toArray(rowDataObject);
@@ -504,7 +518,7 @@ public class DataHelper
 	 * @return
 	 * @throws IOException
 	 */
-	private static ArrayList<Object> getNewExcelFileResults(String fileLocation, String fileName, Boolean hasLabels)
+	private static ArrayList<Object> getNewExcelFileResults(String fileLocation, String fileName, Boolean hasLabels, DataType[] dataTypes)
 	{
 		ArrayList<Object> data = null;
 		String fullFilePath = fileLocation + fileName;
@@ -515,7 +529,7 @@ public class DataHelper
 			ArrayList<Object> results = new ArrayList<Object>();
 			Workbook workbook = new XSSFWorkbook(newExcelFormatFile);
 			Sheet sheet = workbook.getSheetAt(0);
-			data = collectExcelData(hasLabels, newExcelFormatFile, results, workbook, sheet);
+			data = collectExcelData(hasLabels, newExcelFormatFile, results, workbook, sheet, dataTypes);
 		} catch (FileNotFoundException e)
 		{
 			System.out.println("File Not Found");
@@ -535,7 +549,7 @@ public class DataHelper
 	 * @param hasLabels
 	 * @return
 	 */
-	private static ArrayList<Object> getOldExcelFileResults(String fileLocation, String fileName, Boolean hasLabels)
+	private static ArrayList<Object> getOldExcelFileResults(String fileLocation, String fileName, Boolean hasLabels, DataType[] dataTypes)
 	{
 		ArrayList<Object> data = null;
 		String fullFilePath = fileLocation + fileName;
@@ -546,7 +560,7 @@ public class DataHelper
 			ArrayList<Object> results = new ArrayList<Object>();
 			Workbook workbook = new HSSFWorkbook(newExcelFormatFile);
 			Sheet sheet = workbook.getSheetAt(0);
-			data = collectExcelData(hasLabels, newExcelFormatFile, results, workbook, sheet);
+			data = collectExcelData(hasLabels, newExcelFormatFile, results, workbook, sheet, dataTypes);
 		} catch (FileNotFoundException e)
 		{
 			System.out.println("File Not Found");
@@ -617,7 +631,7 @@ public class DataHelper
 		{
 			lines.remove(0);
 		}
-		String pattern = "(,*)([a-zA-Z0-9\\s-\\\\\\/\\\"]+)(,*)";
+		String pattern = "(,*)([a-zA-Z0-9\\s-\\\\\\/\\\"\\.]+)(,*)";
 		Pattern r = Pattern.compile(pattern);
 		for (int i = 0; i < lines.size(); i++)
 		{
@@ -657,9 +671,10 @@ public class DataHelper
 	 *
 	 * @param lines
 	 * @param hasLabels
+	 * @param dataTypes
 	 * @return
 	 */
-	private static Object[][] parseJSONData(ArrayList<String> lines, Boolean hasLabels)
+	private static Object[][] parseJSONData(ArrayList<String> lines, Boolean hasLabels, DataType[] dataTypes)
 	{
 		// TODO Create an implementation to handle JSON
 		// formatted documents
@@ -671,9 +686,10 @@ public class DataHelper
 	 *
 	 * @param lines
 	 * @param hasLabels
+	 * @param dataTypes
 	 * @return
 	 */
-	private static Object[][] parseTabData(ArrayList<String> lines, Boolean hasLabels)
+	private static Object[][] parseTabData(ArrayList<String> lines, Boolean hasLabels, DataType[] dataTypes)
 	{
 		// TODO Create an implementation to handle Tab
 		// formatted documents
@@ -685,9 +701,10 @@ public class DataHelper
 	 *
 	 * @param lines
 	 * @param hasLabels
+	 * @param dataTypes
 	 * @return
 	 */
-	private static Object[][] parseXMLData(ArrayList<String> lines, Boolean hasLabels)
+	private static Object[][] parseXMLData(ArrayList<String> lines, Boolean hasLabels, DataType[] dataTypes)
 	{
 		// TODO Create an implementation to handle XML
 		// formatted documents
