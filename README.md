@@ -1,7 +1,7 @@
-# Basic Project
-## Basic Project Structure
+# williams-sonoma Project
+## williams-sonoma Project Structure
 
-*Default Structure for A Basic Project*
+*Default Structure for williams-sonoma Project*
 
 
 **Java 8**
